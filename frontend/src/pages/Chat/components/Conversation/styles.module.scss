@@ -1,0 +1,91 @@
+.conversation-wrapper {
+    height: 100%;
+    width: 100%;
+    background-color: #fff;
+    border-top-right-radius: 16px;
+    border-bottom-right-radius: 16px;
+    display: flex;
+    flex-direction: column;
+
+    .conversation-header {
+        display: flex;
+        padding: 6px 10px;
+        box-shadow: rgba(0, 0, 0, 0.07) 0px 1px 3px, rgba(0, 0, 0, 0.07) 0px 1px 3px;
+        align-items: center;
+
+        .display-name-and-time {
+            display: flex;
+            flex-direction: column;
+            text-transform: capitalize;
+            gap: 4px;
+
+            .display-name {
+                font-weight: 600;
+            }
+
+            .last-timestamp {
+                font-size: 12px;
+                color: #aaa3aa;
+            }
+        }
+    }
+
+    .conversation-window {
+        flex: 1;
+        padding: 15px 10px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        .conversation-bubble {
+            display: flex;
+
+            &.self {
+                direction: rtl;
+            }
+
+            .conversation-text {
+                width: 70%;
+                padding: 10px;
+
+                &.conversationalist {
+                    border-top-right-radius: 8px;
+                    border-top-left-radius: 8px;
+                    border-bottom-right-radius: 8px;
+                    background-color: #e7e2e6;
+                }
+
+                &.self {
+                    border-top-right-radius: 8px;
+                    border-top-left-radius: 8px;
+                    border-bottom-left-radius: 8px;
+                    background-color: #8f5df0;
+                    direction: ltr;
+                    color: #fff;
+                }
+            }
+        }
+    }
+
+    .chat-input {
+        background-color: #e0d0f7;
+        display: flex;
+        justify-content: space-between;
+        border-radius: 20px;
+        padding: 6px;
+        margin: 4px;
+        border: solid #cfb8f0 1px;
+
+        input {
+            font-size: 14px;
+        }
+
+        button {
+            background-color: #915ff2;
+            padding: 8px 12px;
+            border-radius: 20px;
+            color: #fff;
+        }
+    }
+}

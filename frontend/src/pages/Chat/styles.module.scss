@@ -1,0 +1,21 @@
+.chat-wrapper {
+    display: flex;
+    flex-direction: row;
+    height: 60vh;
+    background-color: #ccc;
+    border-radius: 16px;
+    width: 100%;
+
+    .rooms-wrapper {
+        flex: 2;
+        overflow-y: auto;
+        padding: 20px 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .conversation-wrapper {
+        flex: 5;
+    }
+}
