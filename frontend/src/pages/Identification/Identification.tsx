@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AccountDto } from "../../types/account";
 import styles from "./styles.module.scss";
+import axios from "axios";
 
 type Props = {
   onConnect: (account: AccountDto) => void;
@@ -17,14 +18,25 @@ const Identification = ({ onConnect, isOpen }: Props) => {
     setDisplayName(value);
   };
 
-  const handleConnectClick = () => {
+  const handleConnectClick = async () => {
     if (displayName) {
+      try {
+        const { data } = await axios.post<{ success: string }>(
+          "http://localhost:8080/auth",
+          {
+            nickname: displayName,
+          }
+        );
+        console.log("bob", data);
+      } catch (error) {
+        console.error(error);
+      }
       onConnect({
         displayName,
-        nickname: displayName.replace(' ', '_').toLowerCase(),
+        nickname: displayName.replace(" ", "_").toLowerCase(),
       });
     }
-  }
+  };
 
   return (
     <dialog open={isOpen} className={styles["identification-dialog-wrapper"]}>
@@ -34,7 +46,9 @@ const Identification = ({ onConnect, isOpen }: Props) => {
         value={displayName}
         onChange={handleDisplayNameInputChange}
       />
-      <button type="button" onClick={handleConnectClick}>Connect</button>
+      <button type="button" onClick={handleConnectClick}>
+        Connect
+      </button>
     </dialog>
   );
 };
