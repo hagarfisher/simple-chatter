@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	routes "simple-chatter/src"
+	models "simple-chatter/src/models"
 
 	"github.com/gin-contrib/cors"
 
@@ -11,6 +12,7 @@ import (
 )
 
 func main() {
+	models.ConnectDatabase()
 	router := gin.Default()
 	router.Use(cors.Default())
 	router.GET("/ping", func(context *gin.Context) {
