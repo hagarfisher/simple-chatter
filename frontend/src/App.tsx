@@ -19,7 +19,7 @@ const App = () => {
   };
   return (
     <div className="main-wrapper">
-      <Chat />
+      {accountDetails && <Chat accountDetails={accountDetails} />}
       <Identification onConnect={onConnect} isOpen={isModalOpen} />
     </div>
   );

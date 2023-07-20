@@ -1,21 +1,28 @@
 import Initials from "../../../../components/Initials/Initials";
-import { RoomDto } from "../../../../types/room";
+import { ChatRoomDto } from "../../../../types/room";
 import styles from "./styles.module.scss";
 
 type Props = {
-  roomData: RoomDto;
+  roomData: ChatRoomDto;
+  onRoomClick: () => void;
 };
 
-const Room = ({ roomData }: Props) => {
-  const timeToDisplay = roomData.lastUpdated.toLocaleTimeString();
+const Room = ({ roomData, onRoomClick }: Props) => {
+  console.log(roomData);
+  const timeToDisplay = new Date(roomData.LastUpdated).toLocaleTimeString();
   const maxTextLength = 32;
-  const messageContentParsed = roomData.lastMessageText.length > maxTextLength ? `${roomData.lastMessageText.slice(0, maxTextLength)}...` : roomData.lastMessageText;
+  const messageContentParsed =
+    roomData.LastMessage.length > maxTextLength
+      ? `${roomData.LastMessage.slice(0, maxTextLength)}...`
+      : roomData.LastMessage;
   return (
-    <button className={styles["room-wrapper"]}>
-      <Initials displayName={roomData.name} variant="blue"/>
+    <button onClick={onRoomClick} className={styles["room-wrapper"]}>
+      <Initials displayName={roomData.Participant2} variant="blue" />
       <div className={styles["message-content"]}>
-        <span className={styles["sender-name"]}>{roomData.name}</span>
-        <span className={styles["last-message-content"]}>{messageContentParsed}</span>
+        <span className={styles["sender-name"]}>{roomData.Participant2}</span>
+        <span className={styles["last-message-content"]}>
+          {messageContentParsed}
+        </span>
       </div>
       <span className={styles["time-to-display"]}>{timeToDisplay}</span>
     </button>
