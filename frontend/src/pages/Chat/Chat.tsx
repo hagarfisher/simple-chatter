@@ -12,7 +12,7 @@ type Props = {
 
 const Chat = ({ accountDetails }: Props) => {
   const [rooms, setRooms] = useState<ChatRoomDto[]>([]);
-  const [selectedRoom, setSelectedRoom] = useState("1");
+  const [selectedRoom, setSelectedRoom] = useState<ChatRoomDto>();
 
   useEffect(() => {
     async function fetchConversation() {
@@ -26,24 +26,19 @@ const Chat = ({ accountDetails }: Props) => {
     fetchConversation();
   }, []);
 
-  const onRoomClick = (roomId: string) => {
-    setSelectedRoom(roomId);
+  const onRoomClick = (room: ChatRoomDto) => {
+    setSelectedRoom(room);
   };
 
   return (
     <div className={styles["chat-wrapper"]}>
       <div className={styles["rooms-wrapper"]}>
         {rooms.map((room) => {
-          return (
-            <Room
-              onRoomClick={() => onRoomClick(room.ID.toString())}
-              roomData={room}
-            />
-          );
+          return <Room onRoomClick={() => onRoomClick(room)} roomData={room} />;
         })}
       </div>
       <div className={styles["conversation-wrapper"]}>
-        <Conversation roomId={selectedRoom} />
+        <Conversation room={selectedRoom} />
       </div>
     </div>
   );

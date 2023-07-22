@@ -11,10 +11,10 @@ export type ChatRoomDto = {
 export type MessageDto = {
   ID: number;
   ChatRoomID: number;
-  MessageFrom: string;
-  MessageTo: string;
+  MessageFromID: number;
   Content: string;
   CreatedAt: Date;
+  ChatRoom: ChatRoomDto;
 };
 export type ConversationDto = {
   name: string;
