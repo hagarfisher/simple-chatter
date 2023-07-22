@@ -9,6 +9,7 @@ import (
 
 	"time"
 
+	models "simple-chatter/src/models"
 	"sort"
 	"strconv"
 )
@@ -40,60 +41,92 @@ func Authenticate(context *gin.Context) {
 	if err := context.BindJSON(&requestBody); err != nil {
 		// DO SOMETHING WITH THE ERROR
 	}
+	user := models.User{
+		Nickname: requestBody.Nickname,
+	}
+	userCreateResult := models.DB.FirstOrCreate(&user, models.User{Nickname: requestBody.Nickname})
 
-	context.JSON(http.StatusOK, gin.H{"success": "true"})
+	var users []models.User
+	result := models.DB.Where("id <> ?", user.ID).Find(&users)
+	if result.Error != nil {
+		fmt.Println("error: ")
+		fmt.Println(result.Error)
+		context.JSON(http.StatusInternalServerError, gin.H{"success": "false"})
+		return
+	}
+
+	if userCreateResult.RowsAffected == 1 {
+		var chatRooms = []models.ChatRoom{}
+		for _, otherUser := range users {
+			chatRooms = append(chatRooms, models.ChatRoom{
+				Participant1ID: user.ID,
+				Participant2ID: otherUser.ID,
+			})
+		}
+		models.DB.Create(&chatRooms)
+	}
+
+	context.JSON(http.StatusOK, gin.H{"userId": user.ID})
 }
 
 func GetChatRooms(context *gin.Context) {
-	var chatRoomSample = []ChatRoom{
-		{
-			Id:           1,
-			Participant2: "bob the builder",
-			Participant1: "boop",
-			LastMessage:  "yo bro wazzup?",
-			LastUpdated:  time.Now(),
-		},
-		{
-			Id:           2,
-			Participant2: "roofy the dog",
-			Participant1: "boop",
-			LastMessage:  "Please walk me .. don't forget!",
-			LastUpdated:  time.Now(),
-		},
-		{
-			Id:           3,
-			Participant2: "Master Kenobi",
-			Participant1: "boop",
-			LastMessage:  "Im sending u a phising link please clikc it very trusted yes!",
-			LastUpdated:  time.Now(),
-		},
-		{
-			Id:           1,
-			Participant2: "bob the builder",
-			Participant1: "boop",
-			LastMessage:  "yo bro wazzup?",
-			LastUpdated:  time.Now(),
-		},
-		{
-			Id:           2,
-			Participant2: "roofy the dog",
-			Participant1: "boop",
-			LastMessage:  "Please walk me .. don't forget!",
-			LastUpdated:  time.Now(),
-		},
-		{
-			Id:           3,
-			Participant2: "Master Kenobi",
-			Participant1: "boop",
-			LastMessage:  "Im sending u a phising link please clikc it very trusted yes!",
-			LastUpdated:  time.Now(),
-		},
+	// var chatRoomSample = []ChatRoom{
+	// 	{
+	// 		Id:           1,
+	// 		Participant2: "bob the builder",
+	// 		Participant1: "boop",
+	// 		LastMessage:  "yo bro wazzup?",
+	// 		LastUpdated:  time.Now(),
+	// 	},
+	// 	{
+	// 		Id:           2,
+	// 		Participant2: "roofy the dog",
+	// 		Participant1: "boop",
+	// 		LastMessage:  "Please walk me .. don't forget!",
+	// 		LastUpdated:  time.Now(),
+	// 	},
+	// 	{
+	// 		Id:           3,
+	// 		Participant2: "Master Kenobi",
+	// 		Participant1: "boop",
+	// 		LastMessage:  "Im sending u a phising link please clikc it very trusted yes!",
+	// 		LastUpdated:  time.Now(),
+	// 	},
+	// 	{
+	// 		Id:           1,
+	// 		Participant2: "bob the builder",
+	// 		Participant1: "boop",
+	// 		LastMessage:  "yo bro wazzup?",
+	// 		LastUpdated:  time.Now(),
+	// 	},
+	// 	{
+	// 		Id:           2,
+	// 		Participant2: "roofy the dog",
+	// 		Participant1: "boop",
+	// 		LastMessage:  "Please walk me .. don't forget!",
+	// 		LastUpdated:  time.Now(),
+	// 	},
+	// 	{
+	// 		Id:           3,
+	// 		Participant2: "Master Kenobi",
+	// 		Participant1: "boop",
+	// 		LastMessage:  "Im sending u a phising link please clikc it very trusted yes!",
+	// 		LastUpdated:  time.Now(),
+	// 	},
+	// }
+	userId := context.Query("user_id")
+	var chatRooms []models.ChatRoom
+	result := models.DB.
+		Where("participant1_id = ? OR participant2_id = ?", userId, userId).
+		InnerJoins("Participant1").
+		InnerJoins("Participant2").
+		Find(&chatRooms)
+	if result.Error != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "couldn't find chat rooms"})
+		return
 	}
-	nickname := context.Query("nickname")
-	fmt.Println(chatRoomSample)
-	fmt.Println(nickname)
 
-	context.JSON(http.StatusOK, chatRoomSample)
+	context.JSON(http.StatusOK, chatRooms)
 }
 
 func GetMessages(context *gin.Context) {
