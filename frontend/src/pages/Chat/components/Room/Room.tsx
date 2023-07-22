@@ -9,7 +9,7 @@ type Props = {
 
 const Room = ({ roomData, onRoomClick }: Props) => {
   console.log(roomData);
-  const timeToDisplay = new Date(roomData.LastUpdated).toLocaleTimeString();
+  const timeToDisplay = new Date(roomData.UpdatedAt).toLocaleTimeString();
   const maxTextLength = 32;
   const messageContentParsed =
     roomData.LastMessage.length > maxTextLength
@@ -17,9 +17,11 @@ const Room = ({ roomData, onRoomClick }: Props) => {
       : roomData.LastMessage;
   return (
     <button onClick={onRoomClick} className={styles["room-wrapper"]}>
-      <Initials displayName={roomData.Participant2} variant="blue" />
+      <Initials displayName={roomData.Participant2.Nickname} variant="blue" />
       <div className={styles["message-content"]}>
-        <span className={styles["sender-name"]}>{roomData.Participant2}</span>
+        <span className={styles["sender-name"]}>
+          {roomData.Participant2.Nickname}
+        </span>
         <span className={styles["last-message-content"]}>
           {messageContentParsed}
         </span>

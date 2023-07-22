@@ -18,7 +18,7 @@ const Chat = ({ accountDetails }: Props) => {
     async function fetchConversation() {
       if (accountDetails) {
         const response = await axios.get(`http://localhost:8080/chat-rooms`, {
-          params: { nickname: accountDetails.nickname },
+          params: { user_id: accountDetails.id },
         });
         setRooms(response.data);
       }
@@ -36,7 +36,7 @@ const Chat = ({ accountDetails }: Props) => {
         {rooms.map((room) => {
           return (
             <Room
-              onRoomClick={() => onRoomClick(room.Id.toString())}
+              onRoomClick={() => onRoomClick(room.ID.toString())}
               roomData={room}
             />
           );

@@ -21,20 +21,21 @@ const Identification = ({ onConnect, isOpen }: Props) => {
   const handleConnectClick = async () => {
     if (displayName) {
       try {
-        const { data } = await axios.post<{ success: string }>(
+        const { data } = await axios.post<{ userId: number }>(
           "http://localhost:8080/auth",
           {
             nickname: displayName,
           }
         );
+        onConnect({
+          id: data.userId,
+          displayName,
+          nickname: displayName.replace(" ", "_").toLowerCase(),
+        });
         console.log("bob", data);
       } catch (error) {
         console.error(error);
       }
-      onConnect({
-        displayName,
-        nickname: displayName.replace(" ", "_").toLowerCase(),
-      });
     }
   };
 

@@ -1,14 +1,16 @@
 export type ChatRoomDto = {
-  Id: number;
-  Participant1: string;
-  Participant2: string;
+  ID: number;
+  Participant1ID: number;
+  Participant1: { Nickname: string };
+  Participant2ID: number;
+  Participant2: { Nickname: string };
   LastMessage: string;
-  LastUpdated: Date;
+  UpdatedAt: Date;
 };
 
 export type MessageDto = {
-  Id: number;
-  ChatRoomId: number;
+  ID: number;
+  ChatRoomID: number;
   MessageFrom: string;
   MessageTo: string;
   Content: string;
