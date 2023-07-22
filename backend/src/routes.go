@@ -10,7 +10,6 @@ import (
 	"time"
 
 	models "simple-chatter/src/models"
-	"sort"
 	"strconv"
 )
 
@@ -130,40 +129,7 @@ func GetChatRooms(context *gin.Context) {
 }
 
 func GetMessages(context *gin.Context) {
-	var messages = []Message{
-		{
-			Id:          1,
-			ChatRoomId:  1,
-			MessageFrom: "bob the builder",
-			MessageTo:   "boop",
-			Content:     "hello",
-			CreatedAt:   time.Date(2022, 7, 3, 14, 34, 0, 0, time.Local),
-		},
-		{
-			Id:          1,
-			ChatRoomId:  1,
-			MessageFrom: "boop",
-			MessageTo:   "bob the builder",
-			Content:     "hellooooo bob the builder!",
-			CreatedAt:   time.Date(2023, 7, 3, 14, 39, 0, 0, time.Local),
-		},
-		{
-			Id:          1,
-			ChatRoomId:  1,
-			MessageFrom: "bob the builder",
-			MessageTo:   "boop",
-			Content:     "hellooooo",
-			CreatedAt:   time.Date(2023, 7, 3, 14, 34, 0, 0, time.Local),
-		},
-		{
-			Id:          2,
-			ChatRoomId:  2,
-			MessageFrom: "roofy the dog",
-			MessageTo:   "boop",
-			Content:     "hello",
-			CreatedAt:   time.Now(),
-		},
-	}
+
 	chatRoomId := context.Query("chat_room_id")
 
 	chatRoomIdInt, err := strconv.ParseInt(chatRoomId, 10, 0)
@@ -172,16 +138,19 @@ func GetMessages(context *gin.Context) {
 		context.String(http.StatusInternalServerError, "")
 		return
 	}
-	var messagesInChatRoom = []Message{}
+	var messages []models.Message
+	result := models.DB.Where("chat_room_id = ?", chatRoomIdInt).
+		Joins("ChatRoom").
+		Joins("ChatRoom.Participant1").
+		Joins("ChatRoom.Participant2").
+		Order("created_at asc").
+		Find(&messages)
 
-	for i := range messages {
-		if messages[i].ChatRoomId == int(chatRoomIdInt) {
-			messagesInChatRoom = append(messagesInChatRoom, messages[i])
-		}
+	if result.Error != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "couldn't find messages"})
+		return
 	}
-	sort.Slice(messagesInChatRoom, func(i, j int) bool {
-		return messagesInChatRoom[i].CreatedAt.Before(messagesInChatRoom[j].CreatedAt)
-	})
-	context.JSON(http.StatusOK, messagesInChatRoom)
+
+	context.JSON(http.StatusOK, messages)
 
 }

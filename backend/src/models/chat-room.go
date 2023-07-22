@@ -11,5 +11,5 @@ type ChatRoom struct {
 	Participant2ID uint
 	Participant2   User
 	LastMessage    string
-	Messages       []Message
+	Messages       []Message `gorm:"foreignKey:ChatRoomID"`
 }

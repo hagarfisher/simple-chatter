@@ -6,8 +6,8 @@ import (
 
 type Message struct {
 	gorm.Model
-	ChatRoomID  uint
-	MessageFrom string
-	MessageTo   string
-	Content     string
+	ChatRoomID    uint
+	ChatRoom      ChatRoom
+	MessageFromID uint
+	Content       string
 }
