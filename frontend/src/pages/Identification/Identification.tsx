@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AccountDto } from "../../types/account";
 import styles from "./styles.module.scss";
 import axios from "axios";
+import { API_URL } from "../../utils/config";
 
 type Props = {
   onConnect: (account: AccountDto) => void;
@@ -22,7 +23,7 @@ const Identification = ({ onConnect, isOpen }: Props) => {
     if (displayName) {
       try {
         const { data } = await axios.post<{ userId: number }>(
-          "http://localhost:8080/auth",
+          `http://${API_URL}/auth`,
           {
             nickname: displayName,
           }
@@ -32,7 +33,6 @@ const Identification = ({ onConnect, isOpen }: Props) => {
           displayName,
           nickname: displayName.replace(" ", "_").toLowerCase(),
         });
-        console.log("bob", data);
       } catch (error) {
         console.error(error);
       }

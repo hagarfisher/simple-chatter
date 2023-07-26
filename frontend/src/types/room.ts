@@ -14,7 +14,7 @@ export type MessageDto = {
   MessageFromID: number;
   Content: string;
   CreatedAt: Date;
-  ChatRoom: ChatRoomDto;
+  ChatRoom?: ChatRoomDto;
 };
 export type ConversationDto = {
   name: string;

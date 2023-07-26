@@ -11,6 +11,8 @@ import (
 
 	models "simple-chatter/src/models"
 	"strconv"
+
+	"github.com/gorilla/websocket"
 )
 
 type AuthRequestBody struct {
@@ -38,7 +40,8 @@ func Authenticate(context *gin.Context) {
 	var requestBody AuthRequestBody
 
 	if err := context.BindJSON(&requestBody); err != nil {
-		// DO SOMETHING WITH THE ERROR
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "couldn't auth"})
+		return
 	}
 	user := models.User{
 		Nickname: requestBody.Nickname,
@@ -69,50 +72,6 @@ func Authenticate(context *gin.Context) {
 }
 
 func GetChatRooms(context *gin.Context) {
-	// var chatRoomSample = []ChatRoom{
-	// 	{
-	// 		Id:           1,
-	// 		Participant2: "bob the builder",
-	// 		Participant1: "boop",
-	// 		LastMessage:  "yo bro wazzup?",
-	// 		LastUpdated:  time.Now(),
-	// 	},
-	// 	{
-	// 		Id:           2,
-	// 		Participant2: "roofy the dog",
-	// 		Participant1: "boop",
-	// 		LastMessage:  "Please walk me .. don't forget!",
-	// 		LastUpdated:  time.Now(),
-	// 	},
-	// 	{
-	// 		Id:           3,
-	// 		Participant2: "Master Kenobi",
-	// 		Participant1: "boop",
-	// 		LastMessage:  "Im sending u a phising link please clikc it very trusted yes!",
-	// 		LastUpdated:  time.Now(),
-	// 	},
-	// 	{
-	// 		Id:           1,
-	// 		Participant2: "bob the builder",
-	// 		Participant1: "boop",
-	// 		LastMessage:  "yo bro wazzup?",
-	// 		LastUpdated:  time.Now(),
-	// 	},
-	// 	{
-	// 		Id:           2,
-	// 		Participant2: "roofy the dog",
-	// 		Participant1: "boop",
-	// 		LastMessage:  "Please walk me .. don't forget!",
-	// 		LastUpdated:  time.Now(),
-	// 	},
-	// 	{
-	// 		Id:           3,
-	// 		Participant2: "Master Kenobi",
-	// 		Participant1: "boop",
-	// 		LastMessage:  "Im sending u a phising link please clikc it very trusted yes!",
-	// 		LastUpdated:  time.Now(),
-	// 	},
-	// }
 	userId := context.Query("user_id")
 	var chatRooms []models.ChatRoom
 	result := models.DB.
@@ -152,5 +111,35 @@ func GetMessages(context *gin.Context) {
 	}
 
 	context.JSON(http.StatusOK, messages)
+}
 
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
+func CommunicateMessages(context *gin.Context) {
+	ws, err := upgrader.Upgrade(context.Writer, context.Request, nil)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer ws.Close()
+	for {
+		messageType, message, err := ws.ReadMessage()
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+		//If client message is ping will return pong
+		if string(message) == "ping" {
+			message = []byte("pong")
+		}
+		err = ws.WriteMessage(messageType, message)
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+	}
 }

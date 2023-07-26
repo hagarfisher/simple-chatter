@@ -21,8 +21,13 @@ func main() {
 		})
 	})
 
+	r := newRoom()
+
 	router.POST("/auth", routes.Authenticate)
 	router.GET("/chat-rooms", routes.GetChatRooms)
 	router.GET("/messages", routes.GetMessages)
+	router.GET("/messages/subscribe", r.CreateClient)
+	go r.run()
+
 	router.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }

@@ -5,6 +5,7 @@ import styles from "./styles.module.scss";
 import axios from "axios";
 import { AccountDto } from "../../types/account";
 import { ChatRoomDto } from "../../types/room";
+import { API_URL } from "../../utils/config";
 
 type Props = {
   accountDetails: AccountDto | null;
@@ -17,7 +18,7 @@ const Chat = ({ accountDetails }: Props) => {
   useEffect(() => {
     async function fetchConversation() {
       if (accountDetails) {
-        const response = await axios.get(`http://localhost:8080/chat-rooms`, {
+        const response = await axios.get(`http://${API_URL}/chat-rooms`, {
           params: { user_id: accountDetails.id },
         });
         setRooms(response.data);
@@ -34,7 +35,13 @@ const Chat = ({ accountDetails }: Props) => {
     <div className={styles["chat-wrapper"]}>
       <div className={styles["rooms-wrapper"]}>
         {rooms.map((room) => {
-          return <Room onRoomClick={() => onRoomClick(room)} roomData={room} />;
+          return (
+            <Room
+              key={room.ID}
+              onRoomClick={() => onRoomClick(room)}
+              roomData={room}
+            />
+          );
         })}
       </div>
       <div className={styles["conversation-wrapper"]}>

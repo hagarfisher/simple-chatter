@@ -11,7 +11,6 @@ const App = () => {
   const [isModalOpen, setIsModalOpen] = useState(!accountDetails);
 
   const onConnect = (newAccountData: AccountDto) => {
-    console.log(newAccountData, isModalOpen);
     if (newAccountData) {
       setAccountDetails(newAccountData);
       setIsModalOpen(false);

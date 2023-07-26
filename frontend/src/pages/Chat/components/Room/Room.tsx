@@ -8,7 +8,6 @@ type Props = {
 };
 
 const Room = ({ roomData, onRoomClick }: Props) => {
-  console.log(roomData);
   const timeToDisplay = new Date(roomData.UpdatedAt).toLocaleTimeString();
   const maxTextLength = 32;
   const messageContentParsed =
