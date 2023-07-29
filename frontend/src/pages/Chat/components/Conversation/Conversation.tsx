@@ -2,12 +2,18 @@ import classnames from "classnames";
 import Initials from "../../../../components/Initials/Initials";
 import { ChatRoomDto, MessageDto } from "../../../../types/room";
 import styles from "./styles.module.scss";
-import { useState, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  ButtonHTMLAttributes,
+} from "react";
 import { useLocalStorage } from "usehooks-ts";
 
 import axios from "axios";
 import { AccountDto } from "../../../../types/account";
 import { API_URL } from "../../../../utils/config";
+import { isCurrentUserParticipantOne } from "../../../../utils/utils";
 
 export type Props = {
   room?: ChatRoomDto;
@@ -15,6 +21,7 @@ export type Props = {
 
 const Conversation = ({ room }: Props) => {
   let ws = useRef<WebSocket>();
+  const chatWindowRef = useRef<HTMLDivElement>(null);
   const roomId = room?.ID;
   const [messages, setMessages] = useState<MessageDto[]>([]);
   const [accountDetails] = useLocalStorage<AccountDto | null>("account", null);
@@ -56,19 +63,40 @@ const Conversation = ({ room }: Props) => {
     };
   }, [roomId]);
 
-  if (!room) {
+  useEffect(() => {
+    if (chatWindowRef.current) {
+      chatWindowRef.current.scrollTop = chatWindowRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const handleSendMessage = () => {
+    ws.current?.send(
+      JSON.stringify({
+        event: "send",
+        data: {
+          chat_room_id: roomId,
+          message_from_id: accountDetails?.id,
+          content: messageContent,
+        },
+      })
+    );
+    setMessageContent("");
+  };
+
+  if (!room || !accountDetails) {
     return <div>Please pick a chat to start a conversation.</div>;
   }
 
-  const isCurrentUserParticipantOne =
-    accountDetails?.id === room.Participant1ID;
   const latestTimeStamp =
     messages.length === 0
       ? new Date()
       : new Date(messages[messages.length - 1].CreatedAt);
   const recipient =
-    room[isCurrentUserParticipantOne ? "Participant2" : "Participant1"]
-      .Nickname;
+    room[
+      isCurrentUserParticipantOne(accountDetails, room)
+        ? "Participant2"
+        : "Participant1"
+    ].Nickname;
   // When entering this component, make api call according to room id to actually get conversation data.
   return (
     <div className={styles["conversation-wrapper"]}>
@@ -81,7 +109,7 @@ const Conversation = ({ room }: Props) => {
           </span>
         </div>
       </div>
-      <div className={styles["conversation-window"]}>
+      <div className={styles["conversation-window"]} ref={chatWindowRef}>
         {messages.map((message) => (
           <div
             key={message.ID}
@@ -91,7 +119,11 @@ const Conversation = ({ room }: Props) => {
             })}
           >
             <Initials
-              displayName={accountDetails?.displayName ?? "??"}
+              displayName={
+                accountDetails?.id === message.MessageFromID
+                  ? accountDetails.nickname
+                  : recipient
+              }
               variant={
                 accountDetails?.id === message.MessageFromID ? "blue" : "yellow"
               }
@@ -109,7 +141,14 @@ const Conversation = ({ room }: Props) => {
           </div>
         ))}
       </div>
-      <div className={styles["chat-input"]}>
+      <div
+        className={styles["chat-input"]}
+        onKeyDown={(event: React.KeyboardEvent<HTMLDivElement>) => {
+          if (event.key === "Enter") {
+            handleSendMessage();
+          }
+        }}
+      >
         <input
           value={messageContent}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,17 +160,7 @@ const Conversation = ({ room }: Props) => {
         <button
           type="button"
           onClick={() => {
-            console.log(accountDetails?.id);
-            ws.current?.send(
-              JSON.stringify({
-                event: "send",
-                data: {
-                  chat_room_id: roomId,
-                  message_from_id: accountDetails?.id,
-                  content: messageContent,
-                },
-              })
-            );
+            handleSendMessage();
           }}
         >
           Send
