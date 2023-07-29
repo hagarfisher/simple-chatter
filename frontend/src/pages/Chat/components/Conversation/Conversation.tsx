@@ -38,40 +38,14 @@ const Conversation = ({ room }: Props) => {
       console.log(event);
       if (!ws.current) return;
       if (event.type === "open") {
-        ws.current.send(
-          JSON.stringify({
-            event: "subscribe",
-            data: {
-              chat_room_id: roomId,
-            },
-          })
-        );
+        console.log("connected");
       }
     };
 
-    ws.current.onmessage = (event) => {
-      const payload: {
-        event: string;
-        data: {
-          chat_room_id: number;
-          message_from_id: number;
-          content: string;
-        };
-      } = JSON.parse(event.data);
+    ws.current.onmessage = async (event) => {
+      const payload: MessageDto = JSON.parse(event.data);
       try {
-        if (payload.event === "data" || payload.event === "send") {
-          const reformattedMessage: MessageDto = {
-            ChatRoomID: payload.data.chat_room_id,
-            Content: payload.data.content,
-            MessageFromID: payload.data.message_from_id,
-            ID: 0,
-            CreatedAt: new Date(),
-          };
-          setMessages((previousMessages) => [
-            ...previousMessages,
-            reformattedMessage,
-          ]);
-        }
+        setMessages((previousMessages) => [...previousMessages, payload]);
       } catch (err) {
         console.error(err);
       }
@@ -147,6 +121,7 @@ const Conversation = ({ room }: Props) => {
         <button
           type="button"
           onClick={() => {
+            console.log(accountDetails?.id);
             ws.current?.send(
               JSON.stringify({
                 event: "send",
