@@ -2,12 +2,13 @@ import classnames from "classnames";
 import Initials from "../../../../components/Initials/Initials";
 import { ChatRoomDto, MessageDto } from "../../../../types/room";
 import styles from "./styles.module.scss";
-import { useState, useEffect, useRef } from "react";
-import { useLocalStorage } from "usehooks-ts";
+import React, { useState, useEffect, useRef, useContext } from "react";
 
 import axios from "axios";
 import { AccountDto } from "../../../../types/account";
 import { API_URL } from "../../../../utils/config";
+import { getRecipientNickname } from "../../../../utils/utils";
+import { UserContext } from "../../../../contexts/UserContext";
 
 export type Props = {
   room?: ChatRoomDto;
@@ -15,9 +16,10 @@ export type Props = {
 
 const Conversation = ({ room }: Props) => {
   let ws = useRef<WebSocket>();
+  const chatWindowRef = useRef<HTMLDivElement>(null);
   const roomId = room?.ID;
   const [messages, setMessages] = useState<MessageDto[]>([]);
-  const [accountDetails] = useLocalStorage<AccountDto | null>("account", null);
+  const accountDetails = useContext(UserContext);
   const [messageContent, setMessageContent] = useState<string>("");
 
   useEffect(() => {
@@ -38,40 +40,14 @@ const Conversation = ({ room }: Props) => {
       console.log(event);
       if (!ws.current) return;
       if (event.type === "open") {
-        ws.current.send(
-          JSON.stringify({
-            event: "subscribe",
-            data: {
-              chat_room_id: roomId,
-            },
-          })
-        );
+        console.log("connected");
       }
     };
 
-    ws.current.onmessage = (event) => {
-      const payload: {
-        event: string;
-        data: {
-          chat_room_id: number;
-          message_from_id: number;
-          content: string;
-        };
-      } = JSON.parse(event.data);
+    ws.current.onmessage = async (event) => {
+      const payload: MessageDto = JSON.parse(event.data);
       try {
-        if (payload.event === "data" || payload.event === "send") {
-          const reformattedMessage: MessageDto = {
-            ChatRoomID: payload.data.chat_room_id,
-            Content: payload.data.content,
-            MessageFromID: payload.data.message_from_id,
-            ID: 0,
-            CreatedAt: new Date(),
-          };
-          setMessages((previousMessages) => [
-            ...previousMessages,
-            reformattedMessage,
-          ]);
-        }
+        setMessages((previousMessages) => [...previousMessages, payload]);
       } catch (err) {
         console.error(err);
       }
@@ -82,19 +58,35 @@ const Conversation = ({ room }: Props) => {
     };
   }, [roomId]);
 
-  if (!room) {
+  useEffect(() => {
+    if (chatWindowRef.current) {
+      chatWindowRef.current.scrollTop = chatWindowRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const handleSendMessage = () => {
+    ws.current?.send(
+      JSON.stringify({
+        event: "send",
+        data: {
+          chat_room_id: roomId,
+          message_from_id: accountDetails?.id,
+          content: messageContent,
+        },
+      })
+    );
+    setMessageContent("");
+  };
+
+  if (!room || !accountDetails) {
     return <div>Please pick a chat to start a conversation.</div>;
   }
 
-  const isCurrentUserParticipantOne =
-    accountDetails?.id === room.Participant1ID;
   const latestTimeStamp =
     messages.length === 0
       ? new Date()
       : new Date(messages[messages.length - 1].CreatedAt);
-  const recipient =
-    room[isCurrentUserParticipantOne ? "Participant2" : "Participant1"]
-      .Nickname;
+  const recipient = getRecipientNickname(accountDetails, room);
   // When entering this component, make api call according to room id to actually get conversation data.
   return (
     <div className={styles["conversation-wrapper"]}>
@@ -107,7 +99,7 @@ const Conversation = ({ room }: Props) => {
           </span>
         </div>
       </div>
-      <div className={styles["conversation-window"]}>
+      <div className={styles["conversation-window"]} ref={chatWindowRef}>
         {messages.map((message) => (
           <div
             key={message.ID}
@@ -117,7 +109,11 @@ const Conversation = ({ room }: Props) => {
             })}
           >
             <Initials
-              displayName={accountDetails?.displayName ?? "??"}
+              displayName={
+                accountDetails?.id === message.MessageFromID
+                  ? accountDetails.nickname
+                  : recipient
+              }
               variant={
                 accountDetails?.id === message.MessageFromID ? "blue" : "yellow"
               }
@@ -135,7 +131,14 @@ const Conversation = ({ room }: Props) => {
           </div>
         ))}
       </div>
-      <div className={styles["chat-input"]}>
+      <div
+        className={styles["chat-input"]}
+        onKeyDown={(event: React.KeyboardEvent<HTMLDivElement>) => {
+          if (event.key === "Enter") {
+            handleSendMessage();
+          }
+        }}
+      >
         <input
           value={messageContent}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
@@ -147,16 +150,7 @@ const Conversation = ({ room }: Props) => {
         <button
           type="button"
           onClick={() => {
-            ws.current?.send(
-              JSON.stringify({
-                event: "send",
-                data: {
-                  chat_room_id: roomId,
-                  message_from_id: accountDetails?.id,
-                  content: messageContent,
-                },
-              })
-            );
+            handleSendMessage();
           }}
         >
           Send

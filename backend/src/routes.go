@@ -11,12 +11,16 @@ import (
 
 	models "simple-chatter/src/models"
 	"strconv"
-
-	"github.com/gorilla/websocket"
 )
 
 type AuthRequestBody struct {
 	Nickname string
+}
+
+type CreateMessageRequestBody struct {
+	ChatRoomID    uint
+	MessageFromID uint
+	Content       string
 }
 
 type ChatRoom struct {
@@ -111,35 +115,4 @@ func GetMessages(context *gin.Context) {
 	}
 
 	context.JSON(http.StatusOK, messages)
-}
-
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
-func CommunicateMessages(context *gin.Context) {
-	ws, err := upgrader.Upgrade(context.Writer, context.Request, nil)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer ws.Close()
-	for {
-		messageType, message, err := ws.ReadMessage()
-		if err != nil {
-			fmt.Println(err)
-			break
-		}
-		//If client message is ping will return pong
-		if string(message) == "ping" {
-			message = []byte("pong")
-		}
-		err = ws.WriteMessage(messageType, message)
-		if err != nil {
-			fmt.Println(err)
-			break
-		}
-	}
 }
