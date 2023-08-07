@@ -1,7 +1,8 @@
-import { useLocalStorage } from "usehooks-ts";
+import { UserContext } from "../../../../contexts/UserContext";
+import { useContext } from "react";
 import Initials from "../../../../components/Initials/Initials";
 import { ChatRoomDto } from "../../../../types/room";
-import { isCurrentUserParticipantOne } from "../../../../utils/utils";
+import { getRecipientNickname } from "../../../../utils/utils";
 import styles from "./styles.module.scss";
 import { AccountDto } from "../../../../types/account";
 
@@ -11,7 +12,7 @@ type Props = {
 };
 
 const Room = ({ roomData, onRoomClick }: Props) => {
-  const [accountDetails] = useLocalStorage<AccountDto | null>("account", null);
+  const accountDetails = useContext(UserContext);
   const timeToDisplay = new Date(roomData.UpdatedAt).toLocaleTimeString();
   const maxTextLength = 32;
   const messageContentParsed =
@@ -19,12 +20,8 @@ const Room = ({ roomData, onRoomClick }: Props) => {
       ? `${roomData.LastMessage.slice(0, maxTextLength)}...`
       : roomData.LastMessage;
   if (!accountDetails) return null;
-  const recipient =
-    roomData[
-      isCurrentUserParticipantOne(accountDetails, roomData)
-        ? "Participant2"
-        : "Participant1"
-    ].Nickname;
+  const recipient = getRecipientNickname(accountDetails, roomData);
+
   return (
     <button onClick={onRoomClick} className={styles["room-wrapper"]}>
       <Initials displayName={recipient} variant="blue" />

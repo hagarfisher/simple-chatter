@@ -2,18 +2,13 @@ import classnames from "classnames";
 import Initials from "../../../../components/Initials/Initials";
 import { ChatRoomDto, MessageDto } from "../../../../types/room";
 import styles from "./styles.module.scss";
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  ButtonHTMLAttributes,
-} from "react";
-import { useLocalStorage } from "usehooks-ts";
+import React, { useState, useEffect, useRef, useContext } from "react";
 
 import axios from "axios";
 import { AccountDto } from "../../../../types/account";
 import { API_URL } from "../../../../utils/config";
-import { isCurrentUserParticipantOne } from "../../../../utils/utils";
+import { getRecipientNickname } from "../../../../utils/utils";
+import { UserContext } from "../../../../contexts/UserContext";
 
 export type Props = {
   room?: ChatRoomDto;
@@ -24,7 +19,7 @@ const Conversation = ({ room }: Props) => {
   const chatWindowRef = useRef<HTMLDivElement>(null);
   const roomId = room?.ID;
   const [messages, setMessages] = useState<MessageDto[]>([]);
-  const [accountDetails] = useLocalStorage<AccountDto | null>("account", null);
+  const accountDetails = useContext(UserContext);
   const [messageContent, setMessageContent] = useState<string>("");
 
   useEffect(() => {
@@ -91,12 +86,7 @@ const Conversation = ({ room }: Props) => {
     messages.length === 0
       ? new Date()
       : new Date(messages[messages.length - 1].CreatedAt);
-  const recipient =
-    room[
-      isCurrentUserParticipantOne(accountDetails, room)
-        ? "Participant2"
-        : "Participant1"
-    ].Nickname;
+  const recipient = getRecipientNickname(accountDetails, room);
   // When entering this component, make api call according to room id to actually get conversation data.
   return (
     <div className={styles["conversation-wrapper"]}>
